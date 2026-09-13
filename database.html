@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>모크드 레시피 - 음식 DB 관리</title>
+    <title>모크드 레시피 - 요리 DB 관리</title>
     <style>
         :root {
             --primary: #ff6b35;
@@ -140,13 +140,13 @@
 
         .control-panel input { flex-grow: 1; min-width: 200px; }
 
-        .food-grid {
+        .dish-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
 
-        .food-card {
+        .dish-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -157,7 +157,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
-        .food-card h3 {
+        .dish-card h3 {
             font-size: 1.1rem;
             margin-bottom: 8px;
         }
@@ -173,10 +173,10 @@
             margin-right: 5px;
         }
 
-        .food-card p {
+        .dish-card p {
             color: var(--text-secondary);
             font-size: 0.85rem;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             line-height: 1.4;
         }
 
@@ -231,6 +231,22 @@
             font-size: 0.9rem;
         }
 
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 5px;
+        }
+
+        .checkbox-group label {
+            font-weight: normal;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
         .empty-state {
             text-align: center;
             padding: 50px;
@@ -250,171 +266,293 @@
     <aside>
         <div class="sidebar-header">
             <h1>모크드 레시피</h1>
-            <p>가상 레시피 · 음식 DB</p>
+            <p>가상 레시피 · 요리 DB</p>
         </div>
         <ul class="sidebar-menu">
             <li><a href="index.html"><span>홈</span></a></li>
             <li><a href="recipes.html"><span>레시피 관리</span></a></li>
-            <li class="active"><a href="database.html"><span>음식 DB 관리</span></a></li>
+            <li class="active"><a href="database.html"><span>요리 DB 관리</span></a></li>
         </ul>
     </aside>
 
     <main>
         <header>
-            <h2>음식 데이터베이스 관리</h2>
-            <button class="btn" onclick="openFoodModal()">+ 음식 추가</button>
+            <h2>요리 데이터베이스 관리</h2>
+            <button class="btn" onclick="openDishModal()">+ 요리 추가</button>
         </header>
 
         <div class="control-panel">
-            <input type="text" id="food-search" placeholder="음식명, 별칭, 설명, 원산지, 태그 검색..." oninput="renderFoods()">
-            <select id="food-category-filter" onchange="renderFoods()">
+            <input type="text" id="dish-search" placeholder="요리명, 별칭, 설명, 원산지, 지역, 재료, 태그 검색..." oninput="renderDishes()">
+            <select id="dish-category-filter" onchange="renderDishes()">
                 <option value="">모든 카테고리</option>
             </select>
-            <select id="food-type-filter" onchange="renderFoods()">
+            <select id="dish-type-filter" onchange="renderDishes()">
                 <option value="">모든 유형</option>
-                <option value="식재료">식재료</option>
-                <option value="완성 음식">완성 음식</option>
-                <option value="음료">음료</option>
+                <option value="주식">주식</option>
+                <option value="반찬">반찬</option>
+                <option value="국물요리">국물요리</option>
+                <option value="면요리">면요리</option>
+                <option value="구이요리">구이요리</option>
+                <option value="튀김요리">튀김요리</option>
+                <option value="찜요리">찜요리</option>
+                <option value="조림요리">조림요리</option>
+                <option value="볶음요리">볶음요리</option>
+                <option value="전요리">전요리</option>
+                <option value="무침요리">무침요리</option>
+                <option value="발효요리">발효요리</option>
+                <option value="간식">간식</option>
                 <option value="디저트">디저트</option>
-                <option value="소스">소스</option>
-                <option value="양념">양념</option>
-                <option value="발효식품">발효식품</option>
-                <option value="가공식품">가공식품</option>
+                <option value="음료">음료</option>
+                <option value="소스·양념">소스·양념</option>
                 <option value="기타">기타</option>
             </select>
-            <select id="food-sort" onchange="renderFoods()">
+            <select id="dish-sort" onchange="renderDishes()">
                 <option value="latest">최신 등록순</option>
                 <option value="oldest">오래된 등록순</option>
                 <option value="name">이름순</option>
             </select>
         </div>
 
-        <div class="food-grid" id="food-grid"></div>
+        <div class="dish-grid" id="dish-grid"></div>
     </main>
 
-    <!-- 음식 추가/수정 모달 -->
-    <div class="modal" id="food-modal">
+    <!-- 요리 추가/수정 모달 -->
+    <div class="modal" id="dish-modal">
         <div class="modal-content">
-            <h3 id="food-modal-title">음식 DB 추가</h3>
-            <form id="food-form" onsubmit="handleFoodSubmit(event)">
-                <input type="hidden" id="food-id">
+            <h3 id="dish-modal-title">요리 DB 추가</h3>
+            <form id="dish-form" onsubmit="handleDishSubmit(event)">
+                <input type="hidden" id="dish-id">
+                
                 <div class="form-group">
-                    <label>음식명 *</label>
-                    <input type="text" id="food-name" required>
+                    <label>요리명 *</label>
+                    <input type="text" id="dish-name" required placeholder="예: 김치찌개">
                 </div>
+
                 <div class="form-group">
-                    <label>카테고리 *</label>
-                    <select id="food-category" required></select>
-                </div>
-                <div class="form-group">
-                    <label>음식 유형 *</label>
-                    <select id="food-type" required>
-                        <option value="식재료">식재료</option>
-                        <option value="완성 음식">완성 음식</option>
-                        <option value="음료">음료</option>
-                        <option value="디저트">디저트</option>
-                        <option value="소스">소스</option>
-                        <option value="양념">양념</option>
-                        <option value="발효식품">발효식품</option>
-                        <option value="가공식품">가공식품</option>
+                    <label>음식 문화권 / 요리권 *</label>
+                    <select id="dish-cuisine" required>
+                        <option value="">문화권 선택</option>
+                        <option value="한식">한식</option>
+                        <option value="중식">중식</option>
+                        <option value="일식">일식</option>
+                        <option value="동남아시아 요리">동남아시아 요리</option>
+                        <option value="인도 요리">인도 요리</option>
+                        <option value="중동 요리">중동 요리</option>
+                        <option value="유럽 요리">유럽 요리</option>
+                        <option value="아메리카 요리">아메리카 요리</option>
+                        <option value="아프리카 요리">아프리카 요리</option>
+                        <option value="오세아니아 요리">오세아니아 요리</option>
+                        <option value="퓨전 요리">퓨전 요리</option>
                         <option value="기타">기타</option>
                     </select>
                 </div>
+
+                <div class="form-group">
+                    <label>요리 카테고리 *</label>
+                    <select id="dish-category" required></select>
+                </div>
+
+                <div class="form-group">
+                    <label>요리 유형 *</label>
+                    <select id="dish-type" required>
+                        <option value="">유형 선택</option>
+                        <option value="주식">주식</option>
+                        <option value="반찬">반찬</option>
+                        <option value="국물요리">국물요리</option>
+                        <option value="면요리">면요리</option>
+                        <option value="구이요리">구이요리</option>
+                        <option value="튀김요리">튀김요리</option>
+                        <option value="찜요리">찜요리</option>
+                        <option value="조림요리">조림요리</option>
+                        <option value="볶음요리">볶음요리</option>
+                        <option value="전요리">전요리</option>
+                        <option value="무침요리">무침요리</option>
+                        <option value="발효요리">발효요리</option>
+                        <option value="간식">간식</option>
+                        <option value="디저트">디저트</option>
+                        <option value="음료">음료</option>
+                        <option value="소스·양념">소스·양념</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label>원산지</label>
-                    <input type="text" id="food-origin" placeholder="예: 한국">
+                    <input type="text" id="dish-origin" placeholder="예: 대한민국">
                 </div>
+
+                <div class="form-group">
+                    <label>지역</label>
+                    <input type="text" id="dish-region" placeholder="예: 서울">
+                </div>
+
                 <div class="form-group">
                     <label>별칭 (쉼표로 구분)</label>
-                    <input type="text" id="food-aliases" placeholder="예: 멥쌀, 백미">
+                    <input type="text" id="dish-aliases" placeholder="예: 김치찌개, 김치찌게">
                 </div>
+
                 <div class="form-group">
-                    <label>설명</label>
-                    <textarea id="food-description" rows="2"></textarea>
+                    <label>요리 설명</label>
+                    <textarea id="dish-description" rows="2" placeholder="예: 김치와 돼지고기 등을 넣어 끓이는 한국의 대표적인 찌개 요리."></textarea>
                 </div>
+
+                <div class="form-group">
+                    <label>주요 재료 (쉼표로 구분)</label>
+                    <input type="text" id="dish-ingredients" placeholder="예: 김치, 돼지고기, 두부, 대파">
+                </div>
+
+                <div class="form-group">
+                    <label>주요 조리법</label>
+                    <div class="checkbox-group" id="dish-cooking-methods-group">
+                        <label><input type="checkbox" name="cookingMethod" value="끓이기"> 끓이기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="삶기"> 삶기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="찌기"> 찌기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="굽기"> 굽기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="볶기"> 볶기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="튀기기"> 튀기기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="부치기"> 부치기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="무치기"> 무치기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="절이기"> 절이기</label>
+                        <label><input type="checkbox" name="cookingMethod" value="발효"> 발효</label>
+                        <label><input type="checkbox" name="cookingMethod" value="생식"> 생식</label>
+                        <label><input type="checkbox" name="cookingMethod" value="기타"> 기타</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>1회 제공량</label>
+                    <input type="text" id="dish-serving" placeholder="예: 2인분">
+                </div>
+
+                <div class="form-group">
+                    <label>조리 난이도</label>
+                    <select id="dish-difficulty">
+                        <option value="">난이도 선택</option>
+                        <option value="매우 쉬움">매우 쉬움</option>
+                        <option value="쉬움">쉬움</option>
+                        <option value="보통">보통</option>
+                        <option value="어려움">어려움</option>
+                        <option value="매우 어려움">매우 어려움</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>식사 유형</label>
+                    <div class="checkbox-group" id="dish-meal-types-group">
+                        <label><input type="checkbox" name="mealType" value="아침"> 아침</label>
+                        <label><input type="checkbox" name="mealType" value="점심"> 점심</label>
+                        <label><input type="checkbox" name="mealType" value="저녁"> 저녁</label>
+                        <label><input type="checkbox" name="mealType" value="간식"> 간식</label>
+                        <label><input type="checkbox" name="mealType" value="야식"> 야식</label>
+                        <label><input type="checkbox" name="mealType" value="디저트"> 디저트</label>
+                        <label><input type="checkbox" name="mealType" value="특별식"> 특별식</label>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>태그 (쉼표로 구분)</label>
-                    <input type="text" id="food-tags" placeholder="예: 곡물, 주식">
+                    <input type="text" id="dish-tags" placeholder="예: 한식, 찌개, 김치">
                 </div>
+
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeFoodModal()">취소</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeDishModal()">취소</button>
                     <button type="submit" class="btn">저장</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 음식 상세 모달 -->
-    <div class="modal" id="food-detail-modal">
+    <!-- 요리 상세 모달 -->
+    <div class="modal" id="dish-detail-modal">
         <div class="modal-content">
             <h3 id="detail-name"></h3>
             <div>
+                <span id="detail-cuisine" class="category-badge"></span>
                 <span id="detail-category" class="category-badge"></span>
-                <span id="detail-food-type" class="category-badge" style="background: #e9ecef; color: #495057;"></span>
+                <span id="detail-dish-type" class="category-badge" style="background: #e9ecef; color: #495057;"></span>
             </div>
             <p style="margin: 10px 0; color: var(--text-secondary);" id="detail-description"></p>
             <hr style="border:0; border-top:1px solid var(--border-color); margin: 15px 0;">
-            <p><strong>원산지:</strong> <span id="detail-origin"></span></p>
-            <p style="margin-top: 10px;"><strong>별칭:</strong> <span id="detail-aliases"></span></p>
-            <p style="margin-top: 10px;"><strong>태그:</strong> <span id="detail-tags"></span></p>
+            <p><strong>원산지 / 지역:</strong> <span id="detail-origin-region"></span></p>
+            <p style="margin-top: 8px;"><strong>별칭:</strong> <span id="detail-aliases"></span></p>
+            <p style="margin-top: 8px;"><strong>주요 재료:</strong> <span id="detail-ingredients"></span></p>
+            <p style="margin-top: 8px;"><strong>주요 조리법:</strong> <span id="detail-cooking-methods"></span></p>
+            <p style="margin-top: 8px;"><strong>1회 제공량:</strong> <span id="detail-serving"></span></p>
+            <p style="margin-top: 8px;"><strong>조리 난이도:</strong> <span id="detail-difficulty"></span></p>
+            <p style="margin-top: 8px;"><strong>식사 유형:</strong> <span id="detail-meal-types"></span></p>
+            <p style="margin-top: 8px;"><strong>태그:</strong> <span id="detail-tags"></span></p>
+            <p style="margin-top: 12px; font-size: 0.8rem; color: var(--text-secondary);"><strong>등록일:</strong> <span id="detail-created-at"></span> | <strong>수정일:</strong> <span id="detail-updated-at"></span></p>
             <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-                <button type="button" class="btn btn-secondary" onclick="closeFoodDetailModal()">닫기</button>
+                <button type="button" class="btn btn-secondary" onclick="closeDishDetailModal()">닫기</button>
             </div>
         </div>
     </div>
 
     <script>
         let categories = JSON.parse(localStorage.getItem('mock_categories')) || [];
-        let foods = JSON.parse(localStorage.getItem('mock_foods')) || [];
+        let dishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
         let recipes = JSON.parse(localStorage.getItem('mock_recipes')) || [];
+
+        // 기본 카테고리가 비어있을 경우를 대비한 기본 카테고리 목록 정의
+        const defaultCategories = ['밥', '국', '탕', '찌개', '전골', '찜', '조림', '구이', '볶음', '튀김', '전', '무침', '나물', '면', '만두·딤섬', '김밥', '떡', '죽', '샐러드', '빵', '디저트', '음료', '소스·양념', '기타'];
 
         function updateCategoryDropdowns() {
             categories = JSON.parse(localStorage.getItem('mock_categories')) || [];
-            const filterSelect = document.getElementById('food-category-filter');
-            const formSelect = document.getElementById('food-category');
+            if (categories.length === 0) {
+                categories = defaultCategories;
+                localStorage.setItem('mock_categories', JSON.stringify(categories));
+            }
+
+            const filterSelect = document.getElementById('dish-category-filter');
+            const formSelect = document.getElementById('dish-category');
             
             const currentFilter = filterSelect.value;
             const currentForm = formSelect.value;
 
             filterSelect.innerHTML = '<option value="">모든 카테고리</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
-            formSelect.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            formSelect.innerHTML = '<option value="">카테고리 선택</option>' + categories.map(c => `<option value="${c}">${c}</option>`).join('');
             
             if (categories.includes(currentFilter)) filterSelect.value = currentFilter;
             if (categories.includes(currentForm)) formSelect.value = currentForm;
         }
 
-        // 중복 이름 검사 함수 (레시피 & 음식 DB 상호 체크)
+        // 중복 이름 검사 함수 (레시피 & 요리 DB 상호 체크)
         function checkDuplicateName(name, excludeId = null) {
             const cleanName = name.trim();
             if (!cleanName) return false;
 
             const existingRecipes = JSON.parse(localStorage.getItem('mock_recipes')) || [];
-            const existingFoods = JSON.parse(localStorage.getItem('mock_foods')) || [];
+            const existingDishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
 
             let foundInRecipes = existingRecipes.some(r => r.name.trim() === cleanName);
-            let foundInFoods = existingFoods.some(f => f.name.trim() === cleanName && f.id !== excludeId);
+            let foundInDishes = existingDishes.some(d => d.name.trim() === cleanName && d.id !== excludeId);
 
-            if (foundInRecipes || foundInFoods) {
-                return confirm(`경고: "${cleanName}"과(와) 동일하거나 유사한 이름이 이미 다른 레시피 또는 음식 DB에 존재합니다. 그래도 등록하시겠습니까?`);
+            if (foundInRecipes || foundInDishes) {
+                return confirm(`경고: "${cleanName}"과(와) 동일하거나 유사한 이름이 이미 다른 레시피 또는 요리 DB에 존재합니다. 그래도 등록하시겠습니까?`);
             }
             return true;
         }
 
-        function renderFoods() {
-            foods = JSON.parse(localStorage.getItem('mock_foods')) || [];
-            const search = document.getElementById('food-search').value.toLowerCase();
-            const categoryFilter = document.getElementById('food-category-filter').value;
-            const typeFilter = document.getElementById('food-type-filter').value;
-            const sort = document.getElementById('food-sort').value;
+        function renderDishes() {
+            dishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
+            const search = document.getElementById('dish-search').value.toLowerCase();
+            const categoryFilter = document.getElementById('dish-category-filter').value;
+            const typeFilter = document.getElementById('dish-type-filter').value;
+            const sort = document.getElementById('dish-sort').value;
 
-            let filtered = foods.filter(f => {
-                const matchSearch = f.name.toLowerCase().includes(search) || 
-                                    (f.description && f.description.toLowerCase().includes(search)) ||
-                                    (f.origin && f.origin.toLowerCase().includes(search)) ||
-                                    (f.aliases && f.aliases.some(a => a.toLowerCase().includes(search))) ||
-                                    (f.tags && f.tags.some(t => t.toLowerCase().includes(search)));
-                const matchCat = categoryFilter === '' || f.category === categoryFilter;
-                const matchType = typeFilter === '' || f.foodType === typeFilter;
+            let filtered = dishes.filter(d => {
+                const matchSearch = d.name.toLowerCase().includes(search) || 
+                                    (d.cuisine && d.cuisine.toLowerCase().includes(search)) ||
+                                    (d.description && d.description.toLowerCase().includes(search)) ||
+                                    (d.origin && d.origin.toLowerCase().includes(search)) ||
+                                    (d.region && d.region.toLowerCase().includes(search)) ||
+                                    (d.aliases && d.aliases.some(a => a.toLowerCase().includes(search))) ||
+                                    (d.ingredients && d.ingredients.some(i => i.toLowerCase().includes(search))) ||
+                                    (d.cookingMethods && d.cookingMethods.some(cm => cm.toLowerCase().includes(search))) ||
+                                    (d.mealTypes && d.mealTypes.some(mt => mt.toLowerCase().includes(search))) ||
+                                    (d.tags && d.tags.some(t => t.toLowerCase().includes(search)));
+                const matchCat = categoryFilter === '' || d.category === categoryFilter;
+                const matchType = typeFilter === '' || d.dishType === typeFilter;
                 return matchSearch && matchCat && matchType;
             });
 
@@ -422,124 +560,167 @@
             else if (sort === 'oldest') filtered.sort((a,b) => a.createdAt.localeCompare(b.createdAt));
             else if (sort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
 
-            const grid = document.getElementById('food-grid');
+            const grid = document.getElementById('dish-grid');
             if (filtered.length === 0) {
-                grid.innerHTML = '<div class="empty-state">등록된 음식 데이터가 없습니다.</div>';
+                grid.innerHTML = '<div class="empty-state">등록된 요리 데이터가 없습니다.</div>';
                 return;
             }
 
-            grid.innerHTML = filtered.map(f => `
-                <div class="food-card">
+            grid.innerHTML = filtered.map(d => `
+                <div class="dish-card">
                     <div>
-                        <span class="category-badge">${f.category}</span>
-                        <span class="category-badge" style="background:#e9ecef; color:#495057;">${f.foodType || '기타'}</span>
-                        <h3>${f.name}</h3>
-                        <p>${f.description || '설명 없음'}</p>
+                        <span class="category-badge">${d.cuisine || '기타'}</span>
+                        <span class="category-badge">${d.category}</span>
+                        <h3>${d.name}</h3>
+                        <p style="font-weight: 500; color: var(--text-color); margin-bottom: 6px;">${d.origin || ''} ${d.region ? '· ' + d.region : ''}</p>
+                        <p>${d.description || '설명 없음'}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);"><strong>주요 재료:</strong> ${d.ingredients && d.ingredients.length > 0 ? d.ingredients.join(', ') : '없음'}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;"><strong>난이도:</strong> ${d.difficulty || '보통'}</p>
                     </div>
-                    <div class="card-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="openFoodDetail(${f.id})">상세</button>
-                        <button class="btn btn-sm" onclick="openFoodModal(${f.id})">수정</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteFood(${f.id})">삭제</button>
+                    <div class="card-actions" style="margin-top: 15px;">
+                        <button class="btn btn-secondary btn-sm" onclick="openDishDetail(${d.id})">상세</button>
+                        <button class="btn btn-sm" onclick="openDishModal(${d.id})">수정</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteDish(${d.id})">삭제</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function openFoodModal(id = null) {
+        function openDishModal(id = null) {
             updateCategoryDropdowns();
-            document.getElementById('food-modal').classList.add('active');
+            document.getElementById('dish-modal').classList.add('active');
 
             if (id) {
-                document.getElementById('food-modal-title').textContent = '음식 DB 수정';
-                const food = foods.find(f => f.id === id);
-                document.getElementById('food-id').value = food.id;
-                document.getElementById('food-name').value = food.name;
-                document.getElementById('food-category').value = food.category;
-                document.getElementById('food-type').value = food.foodType || '식재료';
-                document.getElementById('food-origin').value = food.origin || '';
-                document.getElementById('food-aliases').value = food.aliases ? food.aliases.join(', ') : '';
-                document.getElementById('food-description').value = food.description || '';
-                document.getElementById('food-tags').value = food.tags ? food.tags.join(', ') : '';
+                document.getElementById('dish-modal-title').textContent = '요리 DB 수정';
+                const dish = dishes.find(d => d.id === id);
+                document.getElementById('dish-id').value = dish.id;
+                document.getElementById('dish-name').value = dish.name;
+                document.getElementById('dish-cuisine').value = dish.cuisine || '';
+                document.getElementById('dish-category').value = dish.category;
+                document.getElementById('dish-type').value = dish.dishType || '';
+                document.getElementById('dish-origin').value = dish.origin || '';
+                document.getElementById('dish-region').value = dish.region || '';
+                document.getElementById('dish-aliases').value = dish.aliases ? dish.aliases.join(', ') : '';
+                document.getElementById('dish-description').value = dish.description || '';
+                document.getElementById('dish-ingredients').value = dish.ingredients ? dish.ingredients.join(', ') : '';
+                
+                // 체크박스 세팅 (주요 조리법)
+                const cmCheckboxes = document.querySelectorAll('input[name="cookingMethod"]');
+                cmCheckboxes.forEach(cb => {
+                    cb.checked = dish.cookingMethods && dish.cookingMethods.includes(cb.value);
+                });
+
+                document.getElementById('dish-serving').value = dish.serving || '';
+                document.getElementById('dish-difficulty').value = dish.difficulty || '';
+
+                // 체크박스 세팅 (식사 유형)
+                const mtCheckboxes = document.querySelectorAll('input[name="mealType"]');
+                mtCheckboxes.forEach(cb => {
+                    cb.checked = dish.mealTypes && dish.mealTypes.includes(cb.value);
+                });
+
+                document.getElementById('dish-tags').value = dish.tags ? dish.tags.join(', ') : '';
             } else {
-                document.getElementById('food-modal-title').textContent = '음식 DB 추가';
-                document.getElementById('food-form').reset();
-                document.getElementById('food-id').value = '';
+                document.getElementById('dish-modal-title').textContent = '요리 DB 추가';
+                document.getElementById('dish-form').reset();
+                document.getElementById('dish-id').value = '';
             }
         }
 
-        function closeFoodModal() {
-            document.getElementById('food-modal').classList.remove('active');
+        function closeDishModal() {
+            document.getElementById('dish-modal').classList.remove('active');
         }
 
-        function handleFoodSubmit(e) {
+        function handleDishSubmit(e) {
             e.preventDefault();
-            const id = document.getElementById('food-id').value;
-            const name = document.getElementById('food-name').value.trim();
+            const id = document.getElementById('dish-id').value;
+            const name = document.getElementById('dish-name').value.trim();
             const numericId = id ? Number(id) : null;
 
             if (!checkDuplicateName(name, numericId)) return;
 
-            const category = document.getElementById('food-category').value;
-            const foodType = document.getElementById('food-type').value;
-            const origin = document.getElementById('food-origin').value.trim();
-            const description = document.getElementById('food-description').value.trim();
-            const aliases = document.getElementById('food-aliases').value.split(',').map(a => a.trim()).filter(a => a);
-            const tags = document.getElementById('food-tags').value.split(',').map(t => t.trim()).filter(t => t);
+            const cuisine = document.getElementById('dish-cuisine').value;
+            const category = document.getElementById('dish-category').value;
+            const dishType = document.getElementById('dish-type').value;
+            const origin = document.getElementById('dish-origin').value.trim();
+            const region = document.getElementById('dish-region').value.trim();
+            const aliases = document.getElementById('dish-aliases').value.split(',').map(a => a.trim()).filter(a => a);
+            const description = document.getElementById('dish-description').value.trim();
+            const ingredients = document.getElementById('dish-ingredients').value.split(',').map(i => i.trim()).filter(i => i);
+            
+            const cookingMethods = Array.from(document.querySelectorAll('input[name="cookingMethod"]:checked'))
+                                          .map(cb => cb.value);
+            const serving = document.getElementById('dish-serving').value.trim();
+            const difficulty = document.getElementById('dish-difficulty').value;
+            
+            const mealTypes = Array.from(document.querySelectorAll('input[name="mealType"]:checked'))
+                                       .map(cb => cb.value);
+            const tags = document.getElementById('dish-tags').value.split(',').map(t => t.trim()).filter(t => t);
 
-            foods = JSON.parse(localStorage.getItem('mock_foods')) || [];
+            dishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
 
             if (id) {
-                const index = foods.findIndex(f => f.id === Number(id));
+                const index = dishes.findIndex(d => d.id === Number(id));
                 if (index !== -1) {
-                    foods[index] = {
-                        ...foods[index],
-                        name, category, foodType, origin, description, aliases, tags,
+                    dishes[index] = {
+                        ...dishes[index],
+                        name, cuisine, category, dishType, origin, region, aliases, description,
+                        ingredients, cookingMethods, serving, difficulty, mealTypes, tags,
                         updatedAt: new Date().toISOString()
                     };
                 }
             } else {
-                const newFood = {
+                const newDish = {
                     id: Date.now(),
-                    name, category, foodType, origin, description, aliases, tags,
+                    name, cuisine, category, dishType, origin, region, aliases, description,
+                    ingredients, cookingMethods, serving, difficulty, mealTypes, tags,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 };
-                foods.push(newFood);
+                dishes.push(newDish);
             }
 
-            localStorage.setItem('mock_foods', JSON.stringify(foods));
-            closeFoodModal();
-            renderFoods();
+            localStorage.setItem('mock_dishes', JSON.stringify(dishes));
+            closeDishModal();
+            renderDishes();
         }
 
-        function deleteFood(id) {
-            if (confirm('정말 이 음식 데이터를 삭제하시겠습니까?')) {
-                foods = foods.filter(f => f.id !== id);
-                localStorage.setItem('mock_foods', JSON.stringify(foods));
-                renderFoods();
+        function deleteDish(id) {
+            if (confirm('정말 이 요리 데이터를 삭제하시겠습니까?')) {
+                dishes = dishes.filter(d => d.id !== id);
+                localStorage.setItem('mock_dishes', JSON.stringify(dishes));
+                renderDishes();
             }
         }
 
-        function openFoodDetail(id) {
-            const f = foods.find(item => item.id === id);
-            if (!f) return;
-            document.getElementById('detail-name').textContent = f.name;
-            document.getElementById('detail-category').textContent = f.category;
-            document.getElementById('detail-food-type').textContent = f.foodType || '기타';
-            document.getElementById('detail-description').textContent = f.description || '설명 없음';
-            document.getElementById('detail-origin').textContent = f.origin || '정보 없음';
-            document.getElementById('detail-aliases').textContent = f.aliases ? f.aliases.join(', ') : '없음';
-            document.getElementById('detail-tags').textContent = f.tags ? f.tags.join(', ') : '없음';
+        function openDishDetail(id) {
+            const d = dishes.find(item => item.id === id);
+            if (!d) return;
+            document.getElementById('detail-name').textContent = d.name;
+            document.getElementById('detail-cuisine').textContent = d.cuisine || '미분류';
+            document.getElementById('detail-category').textContent = d.category;
+            document.getElementById('detail-dish-type').textContent = d.dishType || '기타';
+            document.getElementById('detail-description').textContent = d.description || '설명 없음';
+            document.getElementById('detail-origin-region').textContent = `${d.origin || '정보 없음'}${d.region ? ' / ' + d.region : ''}`;
+            document.getElementById('detail-aliases').textContent = d.aliases && d.aliases.length > 0 ? d.aliases.join(', ') : '없음';
+            document.getElementById('detail-ingredients').textContent = d.ingredients && d.ingredients.length > 0 ? d.ingredients.join(', ') : '없음';
+            document.getElementById('detail-cooking-methods').textContent = d.cookingMethods && d.cookingMethods.length > 0 ? d.cookingMethods.join(', ') : '없음';
+            document.getElementById('detail-serving').textContent = d.serving || '정보 없음';
+            document.getElementById('detail-difficulty').textContent = d.difficulty || '정보 없음';
+            document.getElementById('detail-meal-types').textContent = d.mealTypes && d.mealTypes.length > 0 ? d.mealTypes.join(', ') : '없음';
+            document.getElementById('detail-tags').textContent = d.tags && d.tags.length > 0 ? d.tags.join(', ') : '없음';
+            document.getElementById('detail-created-at').textContent = d.createdAt ? new Date(d.createdAt).toLocaleString() : '정보 없음';
+            document.getElementById('detail-updated-at').textContent = d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '정보 없음';
 
-            document.getElementById('food-detail-modal').classList.add('active');
+            document.getElementById('dish-detail-modal').classList.add('active');
         }
 
-        function closeFoodDetailModal() {
-            document.getElementById('food-detail-modal').classList.remove('active');
+        function closeDishDetailModal() {
+            document.getElementById('dish-detail-modal').classList.remove('active');
         }
 
         updateCategoryDropdowns();
-        renderFoods();
+        renderDishes();
     </script>
 </body>
 </html>
