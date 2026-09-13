@@ -481,7 +481,7 @@
             "프랑스령 폴리네시아 요리", "통가 요리", "투발루 요리", "왈리스 푸투나 요리"
         ];
 
-        // 초기화
+        // 데이터 로드 및 초기화
         let categories = JSON.parse(localStorage.getItem('mock_categories')) || [];
         if (categories.length === 0) {
             categories = [...defaultCategories];
@@ -491,12 +491,12 @@
         let recipes = JSON.parse(localStorage.getItem('mock_recipes')) || [];
         let foods = JSON.parse(localStorage.getItem('mock_foods')) || [];
 
-        // 대시보드 통계 렌더링
+        // 대시보드 통계 렌더링 (레시피 수, 음식 DB 수, 카테고리 수 집계 반영)
         document.getElementById('stat-recipes').textContent = recipes.length;
         document.getElementById('stat-foods').textContent = foods.length;
         document.getElementById('stat-categories').textContent = categories.length;
 
-        // 최근 레시피 렌더링
+        // 최근 등록 레시피 렌더링
         const recentRecipesList = document.getElementById('recent-recipes-list');
         if (recipes.length > 0) {
             recentRecipesList.innerHTML = recipes.slice(-5).reverse().map(r => `
@@ -507,7 +507,7 @@
             `).join('');
         }
 
-        // 최근 음식 렌더링
+        // 최근 등록 음식 렌더링
         const recentFoodsList = document.getElementById('recent-foods-list');
         if (foods.length > 0) {
             recentFoodsList.innerHTML = foods.slice(-5).reverse().map(f => `
