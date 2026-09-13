@@ -117,6 +117,7 @@
         .btn-danger { background-color: #dc3545; }
         .btn-danger:hover { background-color: #c82333; }
         .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        .btn:disabled { background-color: #cccccc; cursor: not-allowed; }
 
         .control-panel {
             background: var(--card-bg);
@@ -185,6 +186,20 @@
             gap: 5px;
             border-top: 1px solid var(--bg-color);
             padding-top: 12px;
+        }
+
+        /* 페이지네이션 스타일 추가 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .pagination span {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
         }
 
         .modal {
@@ -282,11 +297,11 @@
         </header>
 
         <div class="control-panel">
-            <input type="text" id="dish-search" placeholder="요리명, 별칭, 설명, 원산지, 지역, 재료, 태그 검색..." oninput="renderDishes()">
-            <select id="dish-category-filter" onchange="renderDishes()">
+            <input type="text" id="dish-search" placeholder="요리명, 별칭, 설명, 원산지, 지역, 재료, 태그 검색..." oninput="resetPageAndRender()">
+            <select id="dish-category-filter" onchange="resetPageAndRender()">
                 <option value="">모든 카테고리</option>
             </select>
-            <select id="dish-type-filter" onchange="renderDishes()">
+            <select id="dish-type-filter" onchange="resetPageAndRender()">
                 <option value="">모든 유형</option>
                 <option value="주식">주식</option>
                 <option value="반찬">반찬</option>
@@ -306,7 +321,7 @@
                 <option value="소스·양념">소스·양념</option>
                 <option value="기타">기타</option>
             </select>
-            <select id="dish-sort" onchange="renderDishes()">
+            <select id="dish-sort" onchange="resetPageAndRender()">
                 <option value="latest">최신 등록순</option>
                 <option value="oldest">오래된 등록순</option>
                 <option value="name">이름순</option>
@@ -314,6 +329,9 @@
         </div>
 
         <div class="dish-grid" id="dish-grid"></div>
+
+        <!-- 페이지네이션 UI 추가 -->
+        <div class="pagination" id="dish-pagination"></div>
     </main>
 
     <!-- 요리 추가/수정 모달 -->
@@ -493,6 +511,10 @@
         let dishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
         let recipes = JSON.parse(localStorage.getItem('mock_recipes')) || [];
 
+        // 페이지네이션 상태 변수
+        let currentPage = 1;
+        const itemsPerPage = 40;
+
         // 기본 카테고리가 비어있을 경우를 대비한 기본 카테고리 목록 정의
         const defaultCategories = ['밥', '국', '탕', '찌개', '전골', '찜', '조림', '구이', '볶음', '튀김', '전', '무침', '나물', '면', '만두·딤섬', '김밥', '떡', '죽', '샐러드', '빵', '디저트', '음료', '소스·양념', '기타'];
 
@@ -533,6 +555,12 @@
             return true;
         }
 
+        // 검색어나 필터 변경 시 첫 페이지로 초기화 후 렌더링
+        function resetPageAndRender() {
+            currentPage = 1;
+            renderDishes();
+        }
+
         function renderDishes() {
             dishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
             const search = document.getElementById('dish-search').value.toLowerCase();
@@ -560,13 +588,21 @@
             else if (sort === 'oldest') filtered.sort((a,b) => a.createdAt.localeCompare(b.createdAt));
             else if (sort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
 
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = filtered.slice(startIndex, endIndex);
+
             const grid = document.getElementById('dish-grid');
-            if (filtered.length === 0) {
+            if (paginatedItems.length === 0) {
                 grid.innerHTML = '<div class="empty-state">등록된 요리 데이터가 없습니다.</div>';
+                document.getElementById('dish-pagination').innerHTML = '';
                 return;
             }
 
-            grid.innerHTML = filtered.map(d => `
+            grid.innerHTML = paginatedItems.map(d => `
                 <div class="dish-card">
                     <div>
                         <span class="category-badge">${d.cuisine || '기타'}</span>
@@ -584,6 +620,28 @@
                     </div>
                 </div>
             `).join('');
+
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            const paginationEl = document.getElementById('dish-pagination');
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            paginationEl.innerHTML = `
+                <button class="btn btn-sm" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(currentPage - 1)">이전</button>
+                <span>${currentPage} / ${totalPages}</span>
+                <button class="btn btn-sm" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(currentPage + 1)">다음</button>
+            `;
+        }
+
+        function changePage(targetPage) {
+            currentPage = targetPage;
+            renderDishes();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function openDishModal(id = null) {
