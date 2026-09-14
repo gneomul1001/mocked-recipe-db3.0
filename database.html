@@ -188,7 +188,6 @@
             padding-top: 12px;
         }
 
-        /* 페이지네이션 스타일 추가 */
         .pagination {
             display: flex;
             justify-content: center;
@@ -330,7 +329,6 @@
 
         <div class="dish-grid" id="dish-grid"></div>
 
-        <!-- 페이지네이션 UI 추가 -->
         <div class="pagination" id="dish-pagination"></div>
     </main>
 
@@ -515,7 +513,7 @@
         let currentPage = 1;
         const itemsPerPage = 40;
 
-        // 기본 카테고리가 비어있을 경우를 대비한 기본 카테고리 목록 정의
+        // 기본 카테고리 목록
         const defaultCategories = ['밥', '국', '탕', '찌개', '전골', '찜', '조림', '구이', '볶음', '튀김', '전', '무침', '나물', '면', '만두·딤섬', '김밥', '떡', '죽', '샐러드', '빵', '디저트', '음료', '소스·양념', '기타'];
 
         function updateCategoryDropdowns() {
@@ -555,7 +553,6 @@
             return true;
         }
 
-        // 검색어나 필터 변경 시 첫 페이지로 초기화 후 렌더링
         function resetPageAndRender() {
             currentPage = 1;
             renderDishes();
@@ -662,7 +659,6 @@
                 document.getElementById('dish-description').value = dish.description || '';
                 document.getElementById('dish-ingredients').value = dish.ingredients ? dish.ingredients.join(', ') : '';
                 
-                // 체크박스 세팅 (주요 조리법)
                 const cmCheckboxes = document.querySelectorAll('input[name="cookingMethod"]');
                 cmCheckboxes.forEach(cb => {
                     cb.checked = dish.cookingMethods && dish.cookingMethods.includes(cb.value);
@@ -671,7 +667,6 @@
                 document.getElementById('dish-serving').value = dish.serving || '';
                 document.getElementById('dish-difficulty').value = dish.difficulty || '';
 
-                // 체크박스 세팅 (식사 유형)
                 const mtCheckboxes = document.querySelectorAll('input[name="mealType"]');
                 mtCheckboxes.forEach(cb => {
                     cb.checked = dish.mealTypes && dish.mealTypes.includes(cb.value);
