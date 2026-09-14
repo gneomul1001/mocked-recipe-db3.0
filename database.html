@@ -505,15 +505,25 @@
     </div>
 
     <script>
+        // LocalStorage Key 동기화 (mock_dishes & mock_foods 상호 호환)
+        function getDishesData() {
+            return JSON.parse(localStorage.getItem('mock_dishes')) || JSON.parse(localStorage.getItem('mock_foods')) || [];
+        }
+
+        function saveDishesData(data) {
+            localStorage.setItem('mock_dishes', JSON.stringify(data));
+            localStorage.setItem('mock_foods', JSON.stringify(data));
+        }
+
         let categories = JSON.parse(localStorage.getItem('mock_categories')) || [];
-        let dishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
+        let dishes = getDishesData();
         let recipes = JSON.parse(localStorage.getItem('mock_recipes')) || [];
 
         // 페이지네이션 상태 변수
         let currentPage = 1;
         const itemsPerPage = 40;
 
-        // 기본 카테고리 목록
+        // 기본 카테고리 목록 (index.html 기본 목록과 동기화)
         const defaultCategories = ['밥', '국', '탕', '찌개', '전골', '찜', '조림', '구이', '볶음', '튀김', '전', '무침', '나물', '면', '만두·딤섬', '김밥', '떡', '죽', '샐러드', '빵', '디저트', '음료', '소스·양념', '기타'];
 
         function updateCategoryDropdowns() {
@@ -542,7 +552,7 @@
             if (!cleanName) return false;
 
             const existingRecipes = JSON.parse(localStorage.getItem('mock_recipes')) || [];
-            const existingDishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
+            const existingDishes = getDishesData();
 
             let foundInRecipes = existingRecipes.some(r => r.name.trim() === cleanName);
             let foundInDishes = existingDishes.some(d => d.name.trim() === cleanName && d.id !== excludeId);
@@ -559,7 +569,7 @@
         }
 
         function renderDishes() {
-            dishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
+            dishes = getDishesData();
             const search = document.getElementById('dish-search').value.toLowerCase();
             const categoryFilter = document.getElementById('dish-category-filter').value;
             const typeFilter = document.getElementById('dish-type-filter').value;
@@ -581,8 +591,8 @@
                 return matchSearch && matchCat && matchType;
             });
 
-            if (sort === 'latest') filtered.sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-            else if (sort === 'oldest') filtered.sort((a,b) => a.createdAt.localeCompare(b.createdAt));
+            if (sort === 'latest') filtered.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            else if (sort === 'oldest') filtered.sort((a,b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
             else if (sort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
 
             const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
@@ -607,7 +617,7 @@
                         <h3>${d.name}</h3>
                         <p style="font-weight: 500; color: var(--text-color); margin-bottom: 6px;">${d.origin || ''} ${d.region ? '· ' + d.region : ''}</p>
                         <p>${d.description || '설명 없음'}</p>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary);"><strong>주요 재료:</strong> ${d.ingredients && d.ingredients.length > 0 ? d.ingredients.join(', ') : '없음'}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary);"><strong>주요 재료:</strong> ${d.ingredients && d.ingredients.length > 0 ? (Array.isArray(d.ingredients) ? d.ingredients.join(', ') : d.ingredients) : '없음'}</p>
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;"><strong>난이도:</strong> ${d.difficulty || '보통'}</p>
                     </div>
                     <div class="card-actions" style="margin-top: 15px;">
@@ -655,9 +665,9 @@
                 document.getElementById('dish-type').value = dish.dishType || '';
                 document.getElementById('dish-origin').value = dish.origin || '';
                 document.getElementById('dish-region').value = dish.region || '';
-                document.getElementById('dish-aliases').value = dish.aliases ? dish.aliases.join(', ') : '';
+                document.getElementById('dish-aliases').value = dish.aliases ? (Array.isArray(dish.aliases) ? dish.aliases.join(', ') : dish.aliases) : '';
                 document.getElementById('dish-description').value = dish.description || '';
-                document.getElementById('dish-ingredients').value = dish.ingredients ? dish.ingredients.join(', ') : '';
+                document.getElementById('dish-ingredients').value = dish.ingredients ? (Array.isArray(dish.ingredients) ? dish.ingredients.join(', ') : dish.ingredients) : '';
                 
                 const cmCheckboxes = document.querySelectorAll('input[name="cookingMethod"]');
                 cmCheckboxes.forEach(cb => {
@@ -672,7 +682,7 @@
                     cb.checked = dish.mealTypes && dish.mealTypes.includes(cb.value);
                 });
 
-                document.getElementById('dish-tags').value = dish.tags ? dish.tags.join(', ') : '';
+                document.getElementById('dish-tags').value = dish.tags ? (Array.isArray(dish.tags) ? dish.tags.join(', ') : dish.tags) : '';
             } else {
                 document.getElementById('dish-modal-title').textContent = '요리 DB 추가';
                 document.getElementById('dish-form').reset();
@@ -710,7 +720,7 @@
                                        .map(cb => cb.value);
             const tags = document.getElementById('dish-tags').value.split(',').map(t => t.trim()).filter(t => t);
 
-            dishes = JSON.parse(localStorage.getItem('mock_dishes')) || [];
+            dishes = getDishesData();
 
             if (id) {
                 const index = dishes.findIndex(d => d.id === Number(id));
@@ -733,7 +743,7 @@
                 dishes.push(newDish);
             }
 
-            localStorage.setItem('mock_dishes', JSON.stringify(dishes));
+            saveDishesData(dishes);
             closeDishModal();
             renderDishes();
         }
@@ -741,7 +751,7 @@
         function deleteDish(id) {
             if (confirm('정말 이 요리 데이터를 삭제하시겠습니까?')) {
                 dishes = dishes.filter(d => d.id !== id);
-                localStorage.setItem('mock_dishes', JSON.stringify(dishes));
+                saveDishesData(dishes);
                 renderDishes();
             }
         }
@@ -755,13 +765,13 @@
             document.getElementById('detail-dish-type').textContent = d.dishType || '기타';
             document.getElementById('detail-description').textContent = d.description || '설명 없음';
             document.getElementById('detail-origin-region').textContent = `${d.origin || '정보 없음'}${d.region ? ' / ' + d.region : ''}`;
-            document.getElementById('detail-aliases').textContent = d.aliases && d.aliases.length > 0 ? d.aliases.join(', ') : '없음';
-            document.getElementById('detail-ingredients').textContent = d.ingredients && d.ingredients.length > 0 ? d.ingredients.join(', ') : '없음';
-            document.getElementById('detail-cooking-methods').textContent = d.cookingMethods && d.cookingMethods.length > 0 ? d.cookingMethods.join(', ') : '없음';
+            document.getElementById('detail-aliases').textContent = d.aliases && d.aliases.length > 0 ? (Array.isArray(d.aliases) ? d.aliases.join(', ') : d.aliases) : '없음';
+            document.getElementById('detail-ingredients').textContent = d.ingredients && d.ingredients.length > 0 ? (Array.isArray(d.ingredients) ? d.ingredients.join(', ') : d.ingredients) : '없음';
+            document.getElementById('detail-cooking-methods').textContent = d.cookingMethods && d.cookingMethods.length > 0 ? (Array.isArray(d.cookingMethods) ? d.cookingMethods.join(', ') : d.cookingMethods) : '없음';
             document.getElementById('detail-serving').textContent = d.serving || '정보 없음';
             document.getElementById('detail-difficulty').textContent = d.difficulty || '정보 없음';
-            document.getElementById('detail-meal-types').textContent = d.mealTypes && d.mealTypes.length > 0 ? d.mealTypes.join(', ') : '없음';
-            document.getElementById('detail-tags').textContent = d.tags && d.tags.length > 0 ? d.tags.join(', ') : '없음';
+            document.getElementById('detail-meal-types').textContent = d.mealTypes && d.mealTypes.length > 0 ? (Array.isArray(d.mealTypes) ? d.mealTypes.join(', ') : d.mealTypes) : '없음';
+            document.getElementById('detail-tags').textContent = d.tags && d.tags.length > 0 ? (Array.isArray(d.tags) ? d.tags.join(', ') : d.tags) : '없음';
             document.getElementById('detail-created-at').textContent = d.createdAt ? new Date(d.createdAt).toLocaleString() : '정보 없음';
             document.getElementById('detail-updated-at').textContent = d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '정보 없음';
 
